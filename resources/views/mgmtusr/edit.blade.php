@@ -10,7 +10,7 @@
             <div class="mt-5 md:mt-0 md:col-span-2">
                 <form method="post" action="{{ route('mgmtusr.update', $user->id) }}" autocomplete="off">
                     @csrf
-                    @method('put')
+                    @method('PUT')
                     <div class="shadow overflow-hidden sm:rounded-md">
                         <div class="px-4 py-5 bg-white sm:p-6">
                             <label for="name" class="block font-medium text-sm text-gray-700">Name</label>
@@ -31,18 +31,11 @@
                         </div>
 
                         <div class="px-4 py-5 bg-white sm:p-6">
-                            <label for="password" class="block font-medium text-sm text-gray-700">Password</label>
-                            <input type="password" name="password" id="password" class="form-input rounded-md shadow-sm mt-1 block w-full" />
-                            @error('password')
-                                <p class="text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div class="px-4 py-5 bg-white sm:p-6">
                             <label for="roles" class="block font-medium text-sm text-gray-700">Roles</label>
+                            <input type="hidden" name="oldrole" value="{{ $rolCurrent }}" />
                             <select name="role" id="roles" class="form-multiselect block rounded-md shadow-sm mt-1 block w-full" >
                                 @foreach($roles as $role)
-                                    <option value="{{ $role->name }}" {{ $role->name == old('roles', $rolCurrent[0]) ? ' selected' : '' }}>
+                                    <option value="{{ $role->name }}" {{ $role->name == old('roles', $rolCurrent) ? ' selected' : '' }}>
                                         {{ $role->name }}
                                     </option>
                                 @endforeach
@@ -62,4 +55,5 @@
             </div>
         </div>
     </div>
+
 </x-app-layout>

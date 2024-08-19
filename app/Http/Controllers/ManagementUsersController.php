@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
+use PharIo\Version\Exception;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
@@ -40,9 +41,14 @@ class ManagementUsersController extends Controller
      */
     public function create()
     {
-        //abort_if(Gate::denies('user_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        $authorize= auth()->user()->can('users-create')?true:false;
+        Log::debug(__METHOD__.' '.__LINE__.' $authorize '.print_r($authorize,true));
+        abort_if(!$authorize, Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        $roles = Role::pluck('description', 'id');
+        Log::debug(__METHOD__.' '.__LINE__.'  '.print_r('',true));
+
+        $roles = Role::all()->pluck('name', 'id');
+
 
         return view('mgmtusr.create', compact('roles'));
     }
@@ -52,10 +58,43 @@ class ManagementUsersController extends Controller
      */
     public function store(StoreManagementUsersRequest $request)
     {
-        $user = User::create($request->validated());
-        $user->roles()->sync($request->input('roles', []));
+        Log::debug(__METHOD__.' '.__LINE__.'  '.print_r('',true));
 
-        return redirect()->route('mgmtusr.index');
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|max:255',
+            "email" => 'required|unique:users|max:255',
+            'password' => ['required', Password::min(8)
+                ->letters()
+                ->mixedCase()
+                ->numbers()
+                ->symbols()
+                ->uncompromised()],
+            "roles" => 'required'
+        ]);
+
+
+//dd('xxxxxxxxxxxx');
+
+        $validated = $request->validated();
+
+        Log::debug(__METHOD__.' '.__LINE__.' $request->validated() '.print_r($validated,true));
+//
+        if ($validator->fails()) {
+            return redirect()->route('mgmtusr.create')
+                ->withErrors($validator)
+                ->withInput();
+        }
+        else{
+            $user = User::create($request->validated());
+            $role = $validated['roles'];
+
+            $user->assignRole(strtolower(trim($role)));
+            //$user->roles()->sync($request->input('roles', []));
+            //Session::flash('message', __('user created successfully.'));
+            $data = $request->session()->all();
+            return redirect()->route('mgmtusr.index')
+                ->with('success', __('user created successfully.'));
+        }
     }
 
     /**
@@ -76,14 +115,20 @@ class ManagementUsersController extends Controller
 
     public function edit($userId)
     {
-        abort_if(!$this->user->can('recipes-edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
-        Log::debug('can '.print_r($this->user->can('recipes-edit'),true));
+
+        $authorize= auth()->user()->can('edit-create')?true:false;
+//        Log::debug(__METHOD__.' '.__LINE__.' $authorize '.print_r($authorize,true));
+        abort_if(!$authorize, Response::HTTP_FORBIDDEN, '403 Forbidden');
         //Log::debug('can '.print_r($user->can('recipes-edit')));
 
         $user = User::where('id', $userId)->first();
         $roles = Role::all();
-        $rolCurrent=$user->getRoleNames();
 
+        $rolCurrent=$user->getRoleNames()->first();
+
+        if(empty($rolCurrent)){
+            $rolCurrent= "user-basic";
+        }
         return view('mgmtusr.edit', compact('user', 'roles','rolCurrent'));
     }
 
@@ -92,22 +137,45 @@ class ManagementUsersController extends Controller
      */
     public function update(UpdateManagementUsersRequest $request, $userId)
     {
-        dd($userId);
 
+        Log::debug(__METHOD__.' '.__LINE__.' $userId '.print_r($userId,true));
+
+        $validated = $request->validated();
+        Log::debug(__METHOD__.' '.__LINE__.' $request->validated() '.print_r($validated,true));
+
+        $user = User::where('id', $userId)->first();
         $user->update($request->validated());
 
-        //$user->roles()->sync($request->input('roles', []));
+        $validated = $request->safe();
 
+        $oldrole = $validated['oldrole'];
+        $role = $validated['role'];
+
+        Log::debug(__METHOD__.' '.__LINE__.' $request->input(roles) '.print_r($request->input('roles'),true));
+        Log::debug(__METHOD__.' '.__LINE__.' $request->validate '.print_r($request->validated()));
+
+        //Log::debug(__METHOD__.' '.__LINE__.' $request '.print_r($request));
+
+        $user->removeRole($oldrole);
+        //$user->assignRole($role);
+        $user->assignRole(strtolower(trim($role)));
+        //$user->roles()->sync($role);
+//
         return redirect()->route('mgmtusr.index');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(User $user)
+    public function destroy($userId)
     {
-        //abort_if(Gate::denies('user_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        $authorize= auth()->user()->can('users-delete')?true:false;
+        Log::debug(__METHOD__.' '.__LINE__.' $authorize '.print_r($authorize,true));
+        abort_if(!$authorize, Response::HTTP_FORBIDDEN, '403 Forbidden');
 
+        Log::debug(__METHOD__.' '.__LINE__.' $user '.print_r($userId,true));
+
+        $user = User::where('id', $userId)->first();
         $user->delete();
 
         return redirect()->route('mgmtusr.index');
@@ -116,8 +184,9 @@ class ManagementUsersController extends Controller
 
     public function editpassword($userId)
     {
-        abort_if(!$this->user->can('recipes-edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
-        Log::debug('can '.print_r($this->user->can('recipes-edit'),true));
+        abort_if(!$this->user->can('users-edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        Log::debug(__METHOD__.' '.__LINE__.' can '.print_r($this->user->can('recipes-edit'),true));
+
         //Log::debug('can '.print_r($user->can('recipes-edit')));
 
         $user = User::where('id', $userId)->first();

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Log;
 
 class UpdateManagementUsersRequest extends FormRequest
 {
@@ -11,6 +12,8 @@ class UpdateManagementUsersRequest extends FormRequest
      */
     public function authorize(): bool
     {
+
+        Log::debug(__METHOD__.' '.__LINE__.' $userId '.print_r('',true));
         $authorize= auth()->user()->can('recipes-edit')?true:false;
         return $authorize;
     }
@@ -22,10 +25,11 @@ class UpdateManagementUsersRequest extends FormRequest
      */
     public function rules(): array
     {
+        Log::debug(__METHOD__.' '.__LINE__.' $userId '.print_r('$userId',true));
         return [
             'name' => 'required',
             "email" => 'required',
-            "password" => 'required',
+            "oldrole" => 'required',
             "role" => 'required'
             //
         ];

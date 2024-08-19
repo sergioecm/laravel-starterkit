@@ -59,7 +59,7 @@
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                             @foreach ($user->roles as $role)
                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                                    {{ $role->title }}
+                                                    {{ $role['name'] }}
                                                 </span>
                                             @endforeach
                                         </td>
@@ -68,6 +68,11 @@
                                             <a href="{{ route('mgmtusr.show', $user->id) }}" class="text-blue-600 hover:text-blue-900 mb-2 mr-2">{{__('View')}}</a>
                                             <a href="{{ route('mgmtusr.edit', $user->id) }}" class="text-indigo-600 hover:text-indigo-900 mb-2 mr-2">{{__('Edit')}}</a>
                                             <a href="{{ route('mgmtusr.edtpwd', $user->id) }}" class="text-indigo-600 hover:text-indigo-900 mb-2 mr-2">{{__('Password')}}</a>
+                                            <form method="POST" action="{{ route('password.email') }}" onsubmit="return confirm({{__("Will be sent Link to reset password, to email  {$user->email}")}});">
+                                                <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                                                <input type="submit" class="text-indigo-600 hover:text-indigo-900 mb-2 mr-2" value="{{__('Password Reset Link')}}">
+                                                <input  type="hidden" class="block mt-1 w-full" name="email" :value="old('email')" required/>
+                                            </form>
                                             <form class="inline-block" action="{{ route('mgmtusr.destroy', $user->id) }}" method="POST" onsubmit="return confirm({{__('Are you sure?')}});">
                                                 <input type="hidden" name="_method" value="DELETE">
                                                 <input type="hidden" name="_token" value="{{ csrf_token() }}">

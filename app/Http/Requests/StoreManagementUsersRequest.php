@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Log;
 
 class StoreManagementUsersRequest extends FormRequest
 {
@@ -12,7 +13,8 @@ class StoreManagementUsersRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        $authorize= auth()->user()->can('recipes-edit')?true:false;
+        Log::debug(__METHOD__.' '.__LINE__.'  '.print_r('',true));
+        $authorize= auth()->user()->can('users-create')?true:false;
         return $authorize;
     }
 
@@ -23,11 +25,12 @@ class StoreManagementUsersRequest extends FormRequest
      */
     public function rules(): array
     {
+        Log::debug(__METHOD__.' '.__LINE__.'  '.print_r('',true));
         return [
             'name' => 'required',
             "email" => 'required',
             "password" => 'required',
-            "role" => 'required'
+            "roles" => 'required'
         ];
     }
 }
