@@ -1,5 +1,6 @@
-services: 
-    laravel.test:
+services:
+
+    starterkit.test:
         build:
             context: ./docker/8.3
             dockerfile: Dockerfile

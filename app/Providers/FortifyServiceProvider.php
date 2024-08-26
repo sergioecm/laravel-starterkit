@@ -21,6 +21,9 @@ class FortifyServiceProvider extends ServiceProvider
     public function register(): void
     {
         //
+//        if(request()->is('mgmtusr/*')) {
+//            config()->set('fortify.guard','mgmtusr');
+//        }
     }
 
     /**

@@ -10,6 +10,21 @@ Route::get('/', function () {
 //Route::resource('recipes', \App\Http\Controllers\RecipesController::class);
 //Route::resource('mgmtusr', \App\Http\Controllers\ManagementUsersController::class);
 
+//enumUsers
+//Route::post('reset-password', 'App\Http\Controllers\Auth\PasswordResetLinkController@store')
+//    ->name('password.email')
+//    ->middleware('guest');
+//Route::post('register', 'App\Http\Controllers\Auth\RegisteredUserController@store')
+//    ->middleware('guest');
+
+Route::middleware([
+    'guest'
+])->group(function () {
+    Route::post('reset-password', 'App\Http\Controllers\Auth\PasswordResetLinkController@store')
+        ->name('password.email');
+    Route::post('register', 'App\Http\Controllers\Auth\RegisteredUserController@store');
+
+});
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),

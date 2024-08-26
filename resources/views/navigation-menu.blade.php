@@ -15,9 +15,12 @@
                     <x-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
-                    <x-nav-link href="{{ route('mgmtusr.index') }}" :active="request()->routeIs('mgmtusr.index')">
-                        {{ __('Users') }}
-                    </x-nav-link>
+                    @can('users-view')
+                        <x-nav-link href="{{ route('mgmtusr.index') }}" :active="request()->routeIs('mgmtusr.index')">
+                            {{ __('Users') }}
+                        </x-nav-link>
+                    @endcan
+
                     <x-nav-link href="{{ route('recipes.index') }}">
                         {{ __('Recipes') }}
                     </x-nav-link>

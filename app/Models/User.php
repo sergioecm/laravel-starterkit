@@ -11,9 +11,11 @@ use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Jetstream\HasTeams;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use App\Notifications\ResetPassword;
 //use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class User extends Authenticatable
+    //implements MustVerifyEmail
 {
     use HasApiTokens;
     use HasFactory;
@@ -67,6 +69,43 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new ResetPassword($token));
+    }
+
+    /**
+     * enum usuers
+     * @param array $input
+     * @return User|null
+     */
+    public function create(array $input): ?User
+    {
+        Validator::make($input, [
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255'],
+            'password' => $this->passwordRules(),
+            'terms' => Jetstream::hasTermsAndPrivacyPolicyFeature() ? ['accepted', 'required'] : '',
+        ])->validate();
+
+        if ($user = User::whereEmail($input['email'])->first()) {
+            $user->notify(new AlreadyHaveAccount());
+            //Could not check compatibility between
+            //App\Http\Controllers\Auth\RegisteredUserController::store
+            //return ;
+        }
+
+        return User::create([
+            'name' => $input['name'],
+            'email' => $input['email'],
+            'password' => Hash::make($input['password']),
+        ]);
+    }
+
+//    public function sendPasswordResetNotification($token)
+//    {
+//        $this->notify(new ResetPasswordNotification($token));
+//    }
 
 //    public function __construct(array $attributes = [])
 //    {
